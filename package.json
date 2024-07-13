@@ -1,0 +1,33 @@
+{
+  "name": "use-bem",
+  "version": "1.0.0",
+  "description": "A React hook for generating BEM class names.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/djurnamn/use-bem.git"
+  },
+  "keywords": [
+    "react",
+    "hook",
+    "bem",
+    "block",
+    "element",
+    "modifier",
+    "class"
+  ],
+  "author": "Björn Djurnamn <bjorn@djurnamn.co>",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0",
+    "@types/react": "^16.8.0"
+  }
+}
