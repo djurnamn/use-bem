@@ -1,16 +1,103 @@
 # use-bem
 
-A React hook for generating BEM class names.
+A flexible React hook for generating BEM class names with TypeScript support.
+
+## Features
+
+- 🎯 TypeScript support
+- 🔄 Server-side rendering compatible (Next.js)
+- 🎨 Customizable separators
+- ✨ Multiple modifier styles (string, array, or object)
+- 🚀 Automatic client-side memoization
 
 ## Installation
 
 ```bash
-pnpm install use-bem
+npm install use-bem
 # or
 yarn add use-bem
-# or
-npm install use-bem
 ```
+
+## Basic Usage
+
+```tsx
+import useBem from 'use-bem';
+
+const Component = () => {
+  const bem = useBem('button');
+  
+  return (
+    <button 
+      className={bem('icon', 'large')} // -> "button__icon button__icon--large"
+    >
+      Click me
+    </button>
+  );
+};
+```
+
+## Advanced Usage
+
+### Multiple Modifiers
+
+```tsx
+const bem = useBem('card');
+
+// Array of modifiers
+bem('title', ['primary', 'large']) // -> "card__title card__title--primary card__title--large"
+
+// Object syntax for boolean modifiers
+bem('content', {
+  visible: true,
+  hidden: false,
+  large: true
+}) // -> "card__content card__content--visible card__content--large"
+```
+
+### Custom Configuration
+
+You can create a custom instance with your own separator configuration:
+
+```tsx
+// utils/bem.ts
+import { createBemHook } from 'use-bem';
+
+export default createBemHook({
+  elementSeparator: '-', // Instead of default '__'
+  modifierSeparator: '_' // Instead of default '--'
+});
+
+// Component.tsx
+import useBem from './utils/bem';
+
+const Component = () => {
+  const bem = useBem('block');
+  bem('element', 'modifier') // -> "block-element block-element_modifier"
+};
+```
+
+### Type Safety
+
+The hook exports types for use in component props:
+
+```tsx
+import { BemFunction } from 'use-bem';
+
+interface Props {
+  bemClassName: BemFunction;
+  // other props...
+}
+
+const SubComponent = ({ bemClassName }: Props) => {
+  return <div className={bemClassName('element', 'modifier')}>...</div>;
+};
+```
+
+## Notes
+
+- The hook automatically detects if it's running on the client side and applies memoization only when appropriate
+- Invalid characters in block, element, or modifier names will throw errors
+- Spaces in names are not allowed (use arrays or objects for multiple modifiers)
 
 ## Example
 
@@ -176,17 +263,69 @@ useBem(block: string): BemFunction
 ### BemFunction
 
 ```typescript
-type BemFunction = (element?: string, modifier?: string | string[]) => string;
+type BemFunction = (
+  element?: string,
+  modifier?: string | string[] | Record<string, boolean>
+) => string;
 ```
 
 **Parameters**
 
 - `element` (`string`): The BEM element name.
-- `modifier` (`string` | `string[]`): The BEM modifier name(s).
+- `modifier`: One of the following:
+  - `string`: A single modifier name
+  - `string[]`: Multiple modifier names
+  - `Record<string, boolean>`: Object with modifier names as keys and boolean flags as values
 
 **Returns**
 
 - `className` (`string`): The formatted BEM class name.
+
+### createBemHook
+
+```typescript
+interface BemConfig {
+  elementSeparator?: string; // Default: '__'
+  modifierSeparator?: string; // Default: '--'
+}
+
+createBemHook(config?: BemConfig): (block: string) => BemFunction
+```
+
+**Parameters**
+
+- `config` (`BemConfig`): Optional configuration object to customize separators
+
+**Returns**
+
+- A custom `useBem` hook with the specified configuration
+
+## Examples
+
+### Basic Usage
+
+```tsx
+const bem = useBem('button');
+
+// Block
+bem() // -> "button"
+
+// Element
+bem('icon') // -> "button__icon"
+
+// Element with modifier
+bem('icon', 'large') // -> "button__icon button__icon--large"
+
+// Element with multiple modifiers (array)
+bem('icon', ['large', 'primary']) // -> "button__icon button__icon--large button__icon--primary"
+
+// Element with conditional modifiers (object)
+bem('icon', {
+  large: true,
+  primary: false,
+  disabled: true
+}) // -> "button__icon button__icon--large button__icon--disabled"
+```
 
 ## License
 

@@ -1,6 +1,21 @@
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
-type BemFunction = (element?: string, modifier?: string | string[]) => string;
+export type BemFunction = (
+  element?: string,
+  modifier?: string | string[] | Record<string, boolean>
+) => string;
+
+export interface BemConfig {
+  elementSeparator?: string;
+  modifierSeparator?: string;
+}
+
+const defaultConfig: Required<BemConfig> = {
+  elementSeparator: '__',
+  modifierSeparator: '--'
+};
+
+const isClient = typeof window !== 'undefined';
 
 const validate = (
   value: string | undefined,
@@ -25,31 +40,57 @@ const validate = (
   }
 };
 
-const useBem = (block: string): BemFunction => {
-  validate(block, "block");
+export const createBemHook = (config?: BemConfig) => {
+  const { elementSeparator, modifierSeparator } = { ...defaultConfig, ...config };
 
-  return useMemo(() => {
-    return (element?: string, modifier?: string | string[]): string => {
+  const createBemFunction = (block: string): BemFunction => {
+    validate(block, "block");
+
+    return (element?: string, modifier?: string | string[] | Record<string, boolean>): string => {
       validate(element, "element");
 
-      if (Array.isArray(modifier)) {
-        modifier.forEach((mod) => validate(mod, "modifier"));
-      } else {
-        validate(modifier, "modifier");
+      const elementClass = element ? `${block}${elementSeparator}${element}` : block;
+      
+      if (!modifier) {
+        return elementClass;
       }
 
-      const elementClass = element ? `${block}__${element}` : block;
-      const modifiers = Array.isArray(modifier)
-        ? modifier
-        : [modifier].filter(Boolean);
+      let modifiers: string[] = [];
+
+      if (typeof modifier === 'string') {
+        validate(modifier, "modifier");
+        modifiers = [modifier];
+      } else if (Array.isArray(modifier)) {
+        modifier.forEach(modifierItem => validate(modifierItem, "modifier"));
+        modifiers = modifier;
+      } else {
+        (Object.entries(modifier) as [string, boolean][]).forEach(([modifierKey, value]) => {
+          if (value) {
+            validate(modifierKey, "modifier");
+            modifiers.push(modifierKey);
+          }
+        });
+      }
 
       const modifierClasses = modifiers
-        .map((mod) => `${elementClass}--${mod}`)
+        .map(modifierItem => `${elementClass}${modifierSeparator}${modifierItem}`)
         .join(" ");
 
-      return [elementClass, modifierClasses].filter(Boolean).join(" ");
+      return modifierClasses ? `${elementClass} ${modifierClasses}` : elementClass;
     };
-  }, [block]);
+  };
+
+  const useBem = (block: string): BemFunction => {
+    const bemFunction = createBemFunction(block);
+    
+    if (isClient) {
+      return useMemo(() => bemFunction, [block]);
+    }
+    
+    return bemFunction;
+  };
+
+  return useBem;
 };
 
-export default useBem;
+export default createBemHook();
