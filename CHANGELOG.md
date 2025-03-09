@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.1] - 2025-03-09
+
+### Fixed
+- Updated dist files with latest TypeScript definitions
+
 ## [1.1.0] - 2025-03-09
 
 ### Added
